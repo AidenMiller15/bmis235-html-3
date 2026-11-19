@@ -32,6 +32,144 @@
 <p></p>
 <p>This is a page of my 3 dream destinations that I would love to travel too. Every destination is high on my bucket list and somewhere I would love to travel too.</p>
 <a href="mailto:amiller40@zagmail.gonzaga.edu">email me if you have any questions!</a>
+  <!-- HTML: the stage that holds the three destination names. Each name is a link that opens a photo search in a new tab. -->
+<div class="sc-stage" role="group" aria-label="My three dream destinations">
+  <a class="sc-link" href="https://commons.wikimedia.org/w/index.php?search=Patagonia&amp;title=Special:MediaSearch&amp;type=image" target="_blank" rel="noopener noreferrer">Patagonia</a>
+  <a class="sc-link" href="https://commons.wikimedia.org/w/index.php?search=Machu+Picchu&amp;title=Special:MediaSearch&amp;type=image" target="_blank" rel="noopener noreferrer">Machu Picchu</a>
+  <a class="sc-link" href="https://commons.wikimedia.org/w/index.php?search=Zhangjiajie+National+Forest+Park&amp;title=Special:MediaSearch&amp;type=image" target="_blank" rel="noopener noreferrer">Zhangjiajie National Forest Park</a>
+  <span class="sc-hint">Click a place to see photos</span>
+</div>
+
+<style>
+/* CSS: brand colors and font, the stage box, the floating name pills, and the phone sizing. Every rule starts with .showcase. */
+.showcase .sc-stage {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  height: 400px;
+  max-height: 480px;
+  overflow: hidden;
+  background: #0D0D0D;
+  border: 1px solid #83CCEB;
+  border-radius: 14px;
+  font-family: "Cascadia Code EXT", "Cascadia Code", Consolas, "Courier New", monospace;
+}
+.showcase .sc-link {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  max-width: 78%;
+  padding: 0.55em 1em;
+  color: #83CCEB;
+  background: #0D0D0D;
+  border: 1px solid #83CCEB;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: clamp(13px, 3.8vw, 20px);
+  line-height: 1.35;
+  text-align: center;
+  text-decoration: none;
+  will-change: transform;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+.showcase .sc-link:hover,
+.showcase .sc-link:focus-visible {
+  background: #83CCEB;
+  color: #0D0D0D;
+  box-shadow: 0 0 22px rgba(131, 204, 235, 0.55);
+  outline: none;
+  z-index: 2;
+}
+.showcase .sc-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12px;
+  text-align: center;
+  color: #83CCEB;
+  opacity: 0.6;
+  font-size: 12px;
+  pointer-events: none;
+}
+@media (max-width: 480px) {
+  .showcase .sc-stage { height: 340px; }
+  .showcase .sc-link { max-width: 88%; }
+}
+</style>
+
+<script>
+/* JavaScript: drifts each name around the stage and bounces it off the edges. Hovering or focusing a name pauses it so it is easy to click. Reduced-motion visitors get a still layout. */
+(function () {
+  var stage = document.querySelector('.showcase .sc-stage');
+  if (!stage) return;
+
+  var items = Array.prototype.slice.call(stage.querySelectorAll('.sc-link')).map(function (el) {
+    var angle = Math.random() * Math.PI * 2;
+    var speed = 35 + Math.random() * 30; // pixels per second
+    return { el: el, x: 0, y: 0, w: 0, h: 0, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, paused: false };
+  });
+
+  var W = 0, H = 0, last = 0, placed = false;
+  var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function draw(it) {
+    it.el.style.transform = 'translate(' + it.x.toFixed(1) + 'px,' + it.y.toFixed(1) + 'px)';
+  }
+
+  function measure() {
+    W = stage.clientWidth;
+    H = stage.clientHeight;
+    items.forEach(function (it, i) {
+      it.w = it.el.offsetWidth;
+      it.h = it.el.offsetHeight;
+      if (!placed) {
+        it.x = Math.random() * Math.max(0, W - it.w);
+        it.y = (H / items.length) * i + Math.random() * Math.max(0, H / items.length - it.h);
+      }
+      it.x = Math.min(Math.max(0, it.x), Math.max(0, W - it.w));
+      it.y = Math.min(Math.max(0, it.y), Math.max(0, H - it.h));
+      if (still) {
+        it.x = Math.max(0, (W - it.w) / 2);
+        it.y = Math.max(0, (H / items.length) * (i + 0.5) - it.h / 2);
+      }
+      draw(it);
+    });
+    placed = true;
+  }
+
+  function tick(now) {
+    var dt = Math.min((now - last) / 1000, 0.05);
+    last = now;
+    items.forEach(function (it) {
+      if (it.paused) return;
+      it.x += it.vx * dt;
+      it.y += it.vy * dt;
+      var maxX = Math.max(0, W - it.w);
+      var maxY = Math.max(0, H - it.h);
+      if (it.x <= 0) { it.x = 0; it.vx = Math.abs(it.vx); }
+      if (it.x >= maxX) { it.x = maxX; it.vx = -Math.abs(it.vx); }
+      if (it.y <= 0) { it.y = 0; it.vy = Math.abs(it.vy); }
+      if (it.y >= maxY) { it.y = maxY; it.vy = -Math.abs(it.vy); }
+      draw(it);
+    });
+    requestAnimationFrame(tick);
+  }
+
+  items.forEach(function (it) {
+    function hold() { it.paused = true; }
+    function release() { it.paused = false; }
+    it.el.addEventListener('mouseenter', hold);
+    it.el.addEventListener('mouseleave', release);
+    it.el.addEventListener('focus', hold);
+    it.el.addEventListener('blur', release);
+  });
+
+  measure();
+  window.addEventListener('resize', measure);
+  if (!still) requestAnimationFrame(function (t) { last = t; requestAnimationFrame(tick); });
+})();
+</script>
 <!-- ===== SHOWCASE ======================================================
      This box is empty on purpose. In Part 7 you paste an interactive
      graphic BETWEEN the opening <div> and the closing </div> below.
